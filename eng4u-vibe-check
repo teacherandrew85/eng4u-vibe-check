@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ENG4U Vibe Check – A/B Quiz</title>
+  <style>
+    :root {
+      --bg: #0f172a;         /* slate-900 */
+      --card: #111827;       /* gray-900 */
+      --text: #e5e7eb;       /* gray-200 */
+      --muted: #9ca3af;      /* gray-400 */
+      --accentA: #38bdf8;    /* sky-400 (Thinker) */
+      --accentB: #f472b6;    /* pink-400 (Rebel) */
+      --btnHover: #1f2937;   /* gray-800 */
+      --ok: #22c55e;         /* green-500 */
+      --warn: #f59e0b;       /* amber-500 */
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: radial-gradient(1200px 800px at 20% -10%, #1e293b 10%, var(--bg) 60%) fixed;
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .card {
+      background: rgba(17,24,39,0.85);
+      backdrop-filter: blur(6px);
+      border: 1px solid #1f2937;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+    h1,h2,h3 { margin: 0 0 10px; }
+    .muted { color: var(--muted); }
+    .center { text-align: center; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .space { height: 10px; }
+    .btn {
+      flex: 1 1 300px;
+      border: 1px solid #2b3440;
+      background: #0b1220;
+      color: var(--text);
+      padding: 14px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: transform .05s ease, background .15s ease, border-color .15s ease;
+    }
+    .btn:hover { background: var(--btnHover); border-color:#334155; }
+    .btn:active { transform: translateY(1px) scale(0.995); }
+    .btnA { box-shadow: inset 0 0 0 1px var(--accentA); }
+    .btnB { box-shadow: inset 0 0 0 1px var(--accentB); }
+
+    .pill {
+      display: inline-block; padding: 2px 8px; border-radius: 999px;
+      font-size: 12px; letter-spacing:.2px; vertical-align: middle;
+    }
+    .pillA { background: rgba(56,189,248,.15); color: #7dd3fc; border: 1px solid rgba(56,189,248,.4); }
+    .pillB { background: rgba(244,114,182,.15); color: #f9a8d4; border: 1px solid rgba(244,114,182,.4); }
+
+    .progress {
+      height: 8px; background: #0b1220; border-radius: 6px; overflow: hidden; border:1px solid #1f2937;
+      margin: 12px 0 18px;
+    }
+    .bar {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--accentA), var(--accentB));
+      transition: width .25s ease;
+    }
+
+    .cta {
+      display: inline-block; background: #0ea5e9; color:#001018; font-weight: 700;
+      border-radius: 10px; padding: 10px 14px; border: none; cursor: pointer;
+    }
+    .cta:hover { filter: brightness(1.05); }
+    .ghost {
+      display: inline-block; background: transparent; border: 1px solid #334155; color: var(--text);
+      border-radius: 10px; padding: 10px 14px; cursor: pointer;
+    }
+    .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+    @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
+
+    .footnote { font-size: 12px; color: var(--muted); }
+    .tag { font-weight: 700; }
+    .kudos { color: var(--ok); font-weight: 700; }
+    .warn { color: var(--warn); font-weight: 700; }
+    .tiny { font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" id="app">
+
+      <!-- Intro Screen -->
+      <section id="screen-intro">
+        <h1 class="center">ENG4U Vibe Check</h1>
+        <p class="center muted">Choose A or B at each prompt. At the end, your result appears automatically.</p>
+        <div class="space"></div>
+        <div class="grid2">
+          <div>
+            <h3>Two Paths</h3>
+            <p><span class="pill pillA">A = Thinker</span> calm • curious • reflective</p>
+            <p><span class="pill pillB">B = Rebel</span> bold • passionate • principled</p>
+          </div>
+          <div>
+            <h3>How it works</h3>
+            <ol>
+              <li>Tap A or B for each text</li>
+              <li>Auto‑tally runs in the background</li>
+              <li>Result screen → grab your matching treat → stamp passport</li>
+            </ol>
+          </div>
+        </div>
+        <div class="space"></div>
+        <p class="center"><button class="cta" id="startBtn">Start</button></p>
+      </section>
+
+      <!-- Quiz Screen -->
+      <section id="screen-quiz" style="display:none">
+        <div class="row" style="justify-content:space-between; align-items:center">
+          <div><strong id="qTitle">Title</strong></div>
+          <div class="tiny muted" id="qCount">1 / 8</div>
+        </div>
+        <div class="progress"><div class="bar" id="bar"></div></div>
+        <h2 id="qPrompt">Prompt</h2>
+        <div class="row">
+          <button class="btn btnA" id="btnA">
+            <div class="tag">A — <span id="labelA">Label A</span></div>
+            <div class="muted tiny" id="blurbA"></div>
+          </button>
+          <button class="btn btnB" id="btnB">
+            <div class="tag">B — <span id="labelB">Label B</span></div>
+            <div class="muted tiny" id="blurbB"></div>
+          </button>
+        </div>
+        <div class="space"></div>
+        <p class="footnote">Tip: You can change any text in the code’s <code>QUESTIONS</code> section.</p>
+      </section>
+
+      <!-- Result Screen -->
+      <section id="screen-result" style="display:none">
+        <h2 id="resultHeading" class="center">You are…</h2>
+        <p id="resultSub" class="center muted">Result details</p>
+        <div class="space"></div>
+        <div class="grid2">
+          <div class="card" style="background:#0b1220">
+            <h3>What to do now</h3>
+            <ul>
+              <li>Show this screen for your passport stamp</li>
+              <li>Claim your matching snack/stationery</li>
+              <li>Tell a friend their vibe 😄</li>
+            </ul>
+          </div>
+          <div class="card" style="background:#0b1220">
+            <h3>Your path</h3>
+            <p><span class="pill pillA">A (Thinker): <span id="countA">0</span></span></p>
+            <p><span class="pill pillB">B (Rebel): <span id="countB">0</span></span></p>
+            <p class="tiny muted">Device‑local only. Clears if you reset.</p>
+          </div>
+        </div>
+        <div class="space"></div>
+        <p class="center">
+          <button class="ghost" id="againBtn">Start Over</button>
+          <button class="ghost" id="totalsBtn">Teacher Totals</button>
+        </p>
+        <p id="totalsBox" class="center tiny muted" style="display:none"></p>
+      </section>
+
+    </div>
+  </div>
+
+  <script>
+    /* =========================
+       CONFIG: Edit your prompts
+       ========================= */
+    const QUESTIONS = [
+      {
+        title: "Hamlet — Reflection",
+        prompt: "When you're unsure, what drives your decisions?",
+        A: { label: "Logic & analysis", blurb: "Think first, act second." },
+        B: { label: "Instinct & emotion", blurb: "Feel it, then move." }
+      },
+      {
+        title: "Black Mirror — Technology",
+        prompt: "Does technology mostly improve life?",
+        A: { label: "Yes, innovation excites me", blurb: "Curious & adaptable." },
+        B: { label: "Not always, it worries me", blurb: "Cautious & independent." }
+      },
+      {
+        title: "Brave New World — Identity",
+        prompt: "Would you rather fit in or stand out?",
+        A: { label: "Fit in (harmony)", blurb: "Stable & social." },
+        B: { label: "Stand out (question things)", blurb: "Independent & inquisitive." }
+      },
+      {
+        title: "Flowers for Algernon — Empathy",
+        prompt: "What matters more in success?",
+        A: { label: "Intelligence & skill", blurb: "Growth & mastery." },
+        B: { label: "Kindness & understanding", blurb: "Human connection first." }
+      },
+      {
+        title: "Princess Mononoke — Balance",
+        prompt: "Facing conflict, what's your instinct?",
+        A: { label: "Seek peace; mediate", blurb: "Bridge‑builder (Ashitaka)." },
+        B: { label: "Fight for beliefs", blurb: "Protector (San)." }
+      },
+      {
+        title: "Harrison Bergeron — Freedom",
+        prompt: "What matters more to you?",
+        A: { label: "Fairness for all", blurb: "Equalizer mindset." },
+        B: { label: "Freedom first", blurb: "Liberate potential." }
+      },
+      {
+        title: "Omelas — Moral Compass",
+        prompt: "Is comfort acceptable if someone suffers for it?",
+        A: { label: "Yes (look away)", blurb: "Practical stability." },
+        B: { label: "No (walk away)", blurb: "Principled action." }
+      },
+      {
+        title: "Still I Rise — Resilience",
+        prompt: "When someone doubts you, how do you respond?",
+        A: { label: "Prove them wrong", blurb: "Rising Spirit." },
+        B: { label: "Ignore & stay grounded", blurb: "Rooted Spirit." }
+      }
+    ];
+
+    // Outcome descriptions
+    const OUTCOMES = {
+      THINKER: {
+        title: "You’re a Thinker",
+        sub: "Calm • curious • reflective. Mostly A choices.",
+        pillColor: "A"
+      },
+      REBEL: {
+        title: "You’re a Rebel",
+        sub: "Bold • passionate • principled. Mostly B choices.",
+        pillColor: "B"
+      }
+    };
+
+    /* =========================
+       Simple state + UI wiring
+       ========================= */
+    const el = (id) => document.getElementById(id);
+    const screenIntro = el('screen-intro');
+    const screenQuiz = el('screen-quiz');
+    const screenResult = el('screen-result');
+
+    const qTitle = el('qTitle');
+    const qPrompt = el('qPrompt');
+    const labelA = el('labelA');
+    const labelB = el('labelB');
+    const blurbA = el('blurbA');
+    const blurbB = el('blurbB');
+    const qCount = el('qCount');
+    const bar = el('bar');
+    const countAEl = el('countA');
+    const countBEl = el('countB');
+    const resultHeading = el('resultHeading');
+    const resultSub = el('resultSub');
+    const totalsBox = el('totalsBox');
+
+    let idx = 0;
+    let countA = 0;
+    let countB = 0;
+
+    const TOTALS_KEY = "eng4u_totals_v1"; // localStats across sessions (on this device)
+    function getTotals() {
+      try { return JSON.parse(localStorage.getItem(TOTALS_KEY)) || { thinker:0, rebel:0, attempts:0 }; }
+      catch { return { thinker:0, rebel:0, attempts:0 }; }
+    }
+    function setTotals(t) {
+      localStorage.setItem(TOTALS_KEY, JSON.stringify(t));
+    }
+
+    function showIntro() {
+      screenIntro.style.display = '';
+      screenQuiz.style.display = 'none';
+      screenResult.style.display = 'none';
+    }
+    function startQuiz() {
+      idx = 0; countA = 0; countB = 0; totalsBox.style.display = 'none';
+      screenIntro.style.display = 'none';
+      screenQuiz.style.display = '';
+      screenResult.style.display = 'none';
+      renderQuestion();
+    }
+    function renderQuestion() {
+      const q = QUESTIONS[idx];
+      qTitle.textContent = q.title;
+      qPrompt.textContent = q.prompt;
+      labelA.textContent = q.A.label;
+      labelB.textContent = q.B.label;
+      blurbA.textContent = q.A.blurb;
+      blurbB.textContent = q.B.blurb;
+      qCount.textContent = `${idx+1} / ${QUESTIONS.length}`;
+      bar.style.width = `${((idx)/QUESTIONS.length)*100}%`;
+    }
+    function pick(side) {
+      if (side === 'A') countA++; else countB++;
+      idx++;
+      if (idx < QUESTIONS.length) {
+        renderQuestion();
+      } else {
+        showResult();
+      }
+    }
+    function showResult() {
+      bar.style.width = `100%`;
+      const outcome = (countA >= countB) ? OUTCOMES.THINKER : OUTCOMES.REBEL;
+      resultHeading.textContent = outcome.title;
+      resultSub.textContent = outcome.sub;
+      countAEl.textContent = countA;
+      countBEl.textContent = countB;
+
+      // Update device-local totals
+      const t = getTotals();
+      if (countA >= countB) t.thinker++; else t.rebel++;
+      t.attempts++;
+      setTotals(t);
+
+      screenQuiz.style.display = 'none';
+      screenResult.style.display = '';
+    }
+    function showTotals() {
+      const t = getTotals();
+      totalsBox.innerHTML = `
+        Device totals (local only): 
+        <span class="kudos">Thinker: ${t.thinker}</span> • 
+        <span class="warn">Rebel: ${t.rebel}</span> • 
+        Attempts: ${t.attempts}
+        <br/><br/>
+        <button class="ghost" id="clearTotalsBtn">Clear Device Totals</button>
+      `;
+      totalsBox.style.display = '';
+      const btn = document.getElementById('clearTotalsBtn');
+      btn.onclick = () => { localStorage.removeItem(TOTALS_KEY); totalsBox.style.display = 'none'; };
+    }
+
+    // Events
+    el('startBtn').addEventListener('click', startQuiz);
+    el('btnA').addEventListener('click', () => pick('A'));
+    el('btnB').addEventListener('click', () => pick('B'));
+    el('againBtn').addEventListener('click', startQuiz);
+    el('totalsBtn').addEventListener('click', showTotals);
+
+    // Ready
+    showIntro();
+  </script>
+</body>
+</html>
