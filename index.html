@@ -1,6 +1,3 @@
-<!-- index.html -->
-<!-- ENG4U Vibe Check – A/B quiz; auto‑tallies to Thinker/Rebel.
-     Save this file as index.html and host via GitHub Pages or Netlify. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,11 +5,16 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>ENG4U Vibe Check – A/B Quiz</title>
   <style>
-    :root { --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#9ca3af; --accentA:#38bdf8; --accentB:#f472b6; --btnHover:#1f2937; --ok:#22c55e; --warn:#f59e0b; }
+    :root {
+      --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#9ca3af;
+      --accentA:#38bdf8; --accentB:#f472b6; --btnHover:#1f2937;
+      --ok:#22c55e; --warn:#f59e0b;
+    }
     html,body{height:100%;margin:0;background:radial-gradient(1200px 800px at 20% -10%,#1e293b 10%,var(--bg) 60%) fixed;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";}
     .wrap{max-width:720px;margin:0 auto;padding:24px}
     .card{background:rgba(17,24,39,.85);backdrop-filter:blur(6px);border:1px solid #1f2937;border-radius:16px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-    h1,h2,h3{margin:0 0 10px}.muted{color:var(--muted)}.center{text-align:center}.row{display:flex;gap:12px;flex-wrap:wrap}.space{height:10px}
+    h1,h2,h3{margin:0 0 10px}.muted{color:var(--muted)}.center{text-align:center}
+    .row{display:flex;gap:12px;flex-wrap:wrap}.space{height:10px}
     .btn{flex:1 1 300px;border:1px solid #2b3440;background:#0b1220;color:var(--text);padding:14px 16px;border-radius:12px;cursor:pointer;text-align:left;transition:transform .05s,background .15s,border-color .15s}
     .btn:hover{background:var(--btnHover);border-color:#334155}.btn:active{transform:translateY(1px) scale(.995)}.btnA{box-shadow:inset 0 0 0 1px var(--accentA)}.btnB{box-shadow:inset 0 0 0 1px var(--accentB)}
     .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;letter-spacing:.2px;vertical-align:middle}
@@ -29,6 +31,8 @@
 <body>
   <div class="wrap">
     <div class="card" id="app">
+
+      <!-- Intro -->
       <section id="screen-intro">
         <h1 class="center">ENG4U Vibe Check</h1>
         <p class="center muted">Choose A or B at each prompt. Your result appears automatically at the end.</p>
@@ -44,7 +48,7 @@
             <ol>
               <li>Tap A or B for each text</li>
               <li>Auto‑tally runs in the background</li>
-              <li>Result screen → grab your matching treat → stamp passport</li>
+              <li>Result → grab your matching treat → stamp passport</li>
             </ol>
           </div>
         </div>
@@ -52,6 +56,7 @@
         <p class="center"><button class="cta" id="startBtn">Start</button></p>
       </section>
 
+      <!-- Quiz -->
       <section id="screen-quiz" style="display:none">
         <div class="row" style="justify-content:space-between;align-items:center">
           <div><strong id="qTitle">Title</strong></div>
@@ -73,6 +78,7 @@
         <p class="footnote">Tip: You can edit any text in the <code>QUESTIONS</code> section below.</p>
       </section>
 
+      <!-- Result -->
       <section id="screen-result" style="display:none">
         <h2 id="resultHeading" class="center">You are…</h2>
         <p id="resultSub" class="center muted">Result details</p>
@@ -100,10 +106,12 @@
         </p>
         <p id="totalsBox" class="center tiny muted" style="display:none"></p>
       </section>
+
     </div>
   </div>
 
   <script>
+    /* Questions */
     const QUESTIONS = [
       { title:"Hamlet — Reflection", prompt:"When you're unsure, what drives your decisions?",
         A:{label:"Logic & analysis", blurb:"Think first, act second."},
@@ -131,10 +139,105 @@
         B:{label:"Ignore & stay grounded", blurb:"Rooted Spirit."} }
     ];
 
+    /* Outcome copy */
     const OUTCOMES = {
       THINKER:{ title:"You’re a Thinker", sub:"Calm • curious • reflective. Mostly A choices." },
       REBEL:{ title:"You’re a Rebel", sub:"Bold • passionate • principled. Mostly B choices." }
     };
 
+    /* Helpers */
     const el = id => document.getElementById(id);
-    const screenIntro = el('screen-intro'), screenQuiz = el('screen-quiz'), screenResult = el('screen-result');
+
+    /* Sections & elements */
+    const screenIntro = el('screen-intro');
+    const screenQuiz  = el('screen-quiz');
+    const screenResult= el('screen-result');
+
+    const qTitle = el('qTitle');
+    const qPrompt = el('qPrompt');
+    const labelA = el('labelA');
+    const labelB = el('labelB');
+    const blurbA = el('blurbA');
+    const blurbB = el('blurbB');
+    const qCount = el('qCount');
+    const bar    = el('bar');
+
+    const countAEl = el('countA');
+    const countBEl = el('countB');
+    const resultHeading = el('resultHeading');
+    const resultSub     = el('resultSub');
+    const totalsBox     = el('totalsBox');
+
+    /* State */
+    let idx = 0, countA = 0, countB = 0;
+    const TOTALS_KEY = "eng4u_totals_v1";
+
+    function getTotals(){
+      try { return JSON.parse(localStorage.getItem(TOTALS_KEY)) || { thinker:0,rebel:0,attempts:0 }; }
+      catch { return { thinker:0,rebel:0,attempts:0 }; }
+    }
+    function setTotals(t){ localStorage.setItem(TOTALS_KEY, JSON.stringify(t)); }
+
+    /* Screens */
+    function showIntro(){
+      screenIntro.style.display=''; screenQuiz.style.display='none'; screenResult.style.display='none';
+    }
+    function startQuiz(){
+      idx=0; countA=0; countB=0; totalsBox.style.display='none';
+      screenIntro.style.display='none'; screenQuiz.style.display=''; screenResult.style.display='none';
+      renderQuestion();
+    }
+    function renderQuestion(){
+      const q = QUESTIONS[idx];
+      qTitle.textContent = q.title;
+      qPrompt.textContent = q.prompt;
+      labelA.textContent = q.A.label; blurbA.textContent = q.A.blurb;
+      labelB.textContent = q.B.label; blurbB.textContent = q.B.blurb;
+      qCount.textContent = `${idx+1} / ${QUESTIONS.length}`;
+      bar.style.width = `${(idx/QUESTIONS.length)*100}%`;
+    }
+    function pick(side){
+      if(side==='A') countA++; else countB++;
+      idx++;
+      if(idx < QUESTIONS.length){ renderQuestion(); }
+      else { showResult(); }
+    }
+    function showResult(){
+      bar.style.width = `100%`;
+      const outcome = (countA >= countB) ? OUTCOMES.THINKER : OUTCOMES.REBEL;
+      resultHeading.textContent = outcome.title;
+      resultSub.textContent     = outcome.sub;
+      countAEl.textContent = countA; countBEl.textContent = countB;
+
+      const t = getTotals();
+      if(countA >= countB) t.thinker++; else t.rebel++;
+      t.attempts++; setTotals(t);
+
+      screenQuiz.style.display='none'; screenResult.style.display='';
+    }
+    function showTotals(){
+      const t = getTotals();
+      totalsBox.innerHTML = `
+        Device totals (local only):
+        <span class="kudos">Thinker: ${t.thinker}</span> •
+        <span class="warn">Rebel: ${t.rebel}</span> •
+        Attempts: ${t.attempts}
+        <br/><br/>
+        <button class="ghost" id="clearTotalsBtn">Clear Device Totals</button>
+      `;
+      totalsBox.style.display='';
+      document.getElementById('clearTotalsBtn').onclick = () => { localStorage.removeItem(TOTALS_KEY); totalsBox.style.display='none'; };
+    }
+
+    /* Wire up events */
+    window.addEventListener('DOMContentLoaded', () => {
+      el('startBtn').addEventListener('click', startQuiz);
+      el('btnA').addEventListener('click', () => pick('A'));
+      el('btnB').addEventListener('click', () => pick('B'));
+      el('againBtn').addEventListener('click', startQuiz);
+      el('totalsBtn').addEventListener('click', showTotals);
+      showIntro();
+    });
+  </script>
+</body>
+</html>
