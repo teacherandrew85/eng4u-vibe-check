@@ -1,0 +1,140 @@
+<!-- index.html -->
+<!-- ENG4U Vibe Check – A/B quiz; auto‑tallies to Thinker/Rebel.
+     Save this file as index.html and host via GitHub Pages or Netlify. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ENG4U Vibe Check – A/B Quiz</title>
+  <style>
+    :root { --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#9ca3af; --accentA:#38bdf8; --accentB:#f472b6; --btnHover:#1f2937; --ok:#22c55e; --warn:#f59e0b; }
+    html,body{height:100%;margin:0;background:radial-gradient(1200px 800px at 20% -10%,#1e293b 10%,var(--bg) 60%) fixed;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";}
+    .wrap{max-width:720px;margin:0 auto;padding:24px}
+    .card{background:rgba(17,24,39,.85);backdrop-filter:blur(6px);border:1px solid #1f2937;border-radius:16px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    h1,h2,h3{margin:0 0 10px}.muted{color:var(--muted)}.center{text-align:center}.row{display:flex;gap:12px;flex-wrap:wrap}.space{height:10px}
+    .btn{flex:1 1 300px;border:1px solid #2b3440;background:#0b1220;color:var(--text);padding:14px 16px;border-radius:12px;cursor:pointer;text-align:left;transition:transform .05s,background .15s,border-color .15s}
+    .btn:hover{background:var(--btnHover);border-color:#334155}.btn:active{transform:translateY(1px) scale(.995)}.btnA{box-shadow:inset 0 0 0 1px var(--accentA)}.btnB{box-shadow:inset 0 0 0 1px var(--accentB)}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;letter-spacing:.2px;vertical-align:middle}
+    .pillA{background:rgba(56,189,248,.15);color:#7dd3fc;border:1px solid rgba(56,189,248,.4)}
+    .pillB{background:rgba(244,114,182,.15);color:#f9a8d4;border:1px solid rgba(244,114,182,.4)}
+    .progress{height:8px;background:#0b1220;border-radius:6px;overflow:hidden;border:1px solid #1f2937;margin:12px 0 18px}
+    .bar{height:100%;width:0%;background:linear-gradient(90deg,var(--accentA),var(--accentB));transition:width .25s}
+    .cta{display:inline-block;background:#0ea5e9;color:#001018;font-weight:700;border-radius:10px;padding:10px 14px;border:none;cursor:pointer}
+    .cta:hover{filter:brightness(1.05)}.ghost{display:inline-block;background:transparent;border:1px solid #334155;color:var(--text);border-radius:10px;padding:10px 14px;cursor:pointer}
+    .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}@media (max-width:640px){.grid2{grid-template-columns:1fr}}
+    .footnote{font-size:12px;color:var(--muted)}.tag{font-weight:700}.kudos{color:var(--ok);font-weight:700}.warn{color:var(--warn);font-weight:700}.tiny{font-size:12px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" id="app">
+      <section id="screen-intro">
+        <h1 class="center">ENG4U Vibe Check</h1>
+        <p class="center muted">Choose A or B at each prompt. Your result appears automatically at the end.</p>
+        <div class="space"></div>
+        <div class="grid2">
+          <div>
+            <h3>Two Paths</h3>
+            <p><span class="pill pillA">A = Thinker</span> calm • curious • reflective</p>
+            <p><span class="pill pillB">B = Rebel</span> bold • passionate • principled</p>
+          </div>
+          <div>
+            <h3>How it works</h3>
+            <ol>
+              <li>Tap A or B for each text</li>
+              <li>Auto‑tally runs in the background</li>
+              <li>Result screen → grab your matching treat → stamp passport</li>
+            </ol>
+          </div>
+        </div>
+        <div class="space"></div>
+        <p class="center"><button class="cta" id="startBtn">Start</button></p>
+      </section>
+
+      <section id="screen-quiz" style="display:none">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div><strong id="qTitle">Title</strong></div>
+          <div class="tiny muted" id="qCount">1 / 8</div>
+        </div>
+        <div class="progress"><div class="bar" id="bar"></div></div>
+        <h2 id="qPrompt">Prompt</h2>
+        <div class="row">
+          <button class="btn btnA" id="btnA">
+            <div class="tag">A — <span id="labelA">Label A</span></div>
+            <div class="muted tiny" id="blurbA"></div>
+          </button>
+          <button class="btn btnB" id="btnB">
+            <div class="tag">B — <span id="labelB">Label B</span></div>
+            <div class="muted tiny" id="blurbB"></div>
+          </button>
+        </div>
+        <div class="space"></div>
+        <p class="footnote">Tip: You can edit any text in the <code>QUESTIONS</code> section below.</p>
+      </section>
+
+      <section id="screen-result" style="display:none">
+        <h2 id="resultHeading" class="center">You are…</h2>
+        <p id="resultSub" class="center muted">Result details</p>
+        <div class="space"></div>
+        <div class="grid2">
+          <div class="card" style="background:#0b1220">
+            <h3>What to do now</h3>
+            <ul>
+              <li>Show this screen for your passport stamp</li>
+              <li>Claim your matching snack/stationery</li>
+              <li>Tell a friend their vibe 😄</li>
+            </ul>
+          </div>
+          <div class="card" style="background:#0b1220">
+            <h3>Your path</h3>
+            <p><span class="pill pillA">A (Thinker): <span id="countA">0</span></span></p>
+            <p><span class="pill pillB">B (Rebel): <span id="countB">0</span></span></p>
+            <p class="tiny muted">Device‑local only. Clears if you reset.</p>
+          </div>
+        </div>
+        <div class="space"></div>
+        <p class="center">
+          <button class="ghost" id="againBtn">Start Over</button>
+          <button class="ghost" id="totalsBtn">Teacher Totals</button>
+        </p>
+        <p id="totalsBox" class="center tiny muted" style="display:none"></p>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const QUESTIONS = [
+      { title:"Hamlet — Reflection", prompt:"When you're unsure, what drives your decisions?",
+        A:{label:"Logic & analysis", blurb:"Think first, act second."},
+        B:{label:"Instinct & emotion", blurb:"Feel it, then move."} },
+      { title:"Black Mirror — Technology", prompt:"Does technology mostly improve life?",
+        A:{label:"Yes, innovation excites me", blurb:"Curious & adaptable."},
+        B:{label:"Not always, it worries me", blurb:"Cautious & independent."} },
+      { title:"Brave New World — Identity", prompt:"Would you rather fit in or stand out?",
+        A:{label:"Fit in (harmony)", blurb:"Stable & social."},
+        B:{label:"Stand out (question things)", blurb:"Independent & inquisitive."} },
+      { title:"Flowers for Algernon — Empathy", prompt:"What matters more in success?",
+        A:{label:"Intelligence & skill", blurb:"Growth & mastery."},
+        B:{label:"Kindness & understanding", blurb:"Human connection first."} },
+      { title:"Princess Mononoke — Balance", prompt:"Facing conflict, what's your instinct?",
+        A:{label:"Seek peace; mediate", blurb:"Bridge‑builder (Ashitaka)."},
+        B:{label:"Fight for beliefs", blurb:"Protector (San)."} },
+      { title:"Harrison Bergeron — Freedom", prompt:"What matters more to you?",
+        A:{label:"Fairness for all", blurb:"Equalizer mindset."},
+        B:{label:"Freedom first", blurb:"Liberate potential."} },
+      { title:"Omelas — Moral Compass", prompt:"Is comfort acceptable if someone suffers for it?",
+        A:{label:"Yes (look away)", blurb:"Practical stability."},
+        B:{label:"No (walk away)", blurb:"Principled action."} },
+      { title:"Still I Rise — Resilience", prompt:"When someone doubts you, how do you respond?",
+        A:{label:"Prove them wrong", blurb:"Rising Spirit."},
+        B:{label:"Ignore & stay grounded", blurb:"Rooted Spirit."} }
+    ];
+
+    const OUTCOMES = {
+      THINKER:{ title:"You’re a Thinker", sub:"Calm • curious • reflective. Mostly A choices." },
+      REBEL:{ title:"You’re a Rebel", sub:"Bold • passionate • principled. Mostly B choices." }
+    };
+
+    const el = id => document.getElementById(id);
+    const screenIntro = el('screen-intro'), screenQuiz = el('screen-quiz'), screenResult = el('screen-result');
